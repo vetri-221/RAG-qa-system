@@ -1,17 +1,17 @@
 Here's a complete, professional README for your project — copy this exactly:
 
 markdown
-# 📄 PDF-Based RAG Question Answering System
+# 📄 Document-Based RAG Question Answering System
 
 An AI-powered question answering system that allows users to ask 
-natural language questions about PDF documents using 
+natural language questions about any documents using 
 Retrieval-Augmented Generation (RAG) pipeline.
 
 ---
 
 ## 🧠 How It Works
 
-1. PDF documents are loaded and split into semantic chunks
+1. PDF,xml,text etc like any kind of  documents are loaded and split into semantic chunks
 2. Each chunk is converted into vector embeddings using 
    SentenceTransformers (all-MiniLM-L6-v2)
 3. Embeddings are stored in ChromaDB vector store with 
