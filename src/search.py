@@ -11,12 +11,37 @@ class RAGSearch:
         # Load or build vectorstore
         faiss_path = os.path.join(persist_dir, "faiss.index")
         meta_path = os.path.join(persist_dir, "metadata.pkl")
-        if not (os.path.exists(faiss_path) and os.path.exists(meta_path)):
-            from data_loader import load_all_documents
+        from src.data_loader import load_all_documents
+
+        if not (
+            os.path.exists(faiss_path)
+            and os.path.exists(meta_path)
+            ):
+            print("[INFO] No existing FAISS store found.")
             docs = load_all_documents("data")
             self.vectorstore.build_from_documents(docs)
         else:
+            print("[INFO] Existing FAISS store found.")
             self.vectorstore.load()
+            docs = load_all_documents("data")
+            indexed_sources = {
+                meta.get("source")
+                for meta in self.vectorstore.metadata
+                if meta.get("source")
+                }
+            new_docs = [
+                doc for doc in docs
+                if doc.metadata.get("source") not in indexed_sources
+                ]
+            if new_docs:
+                print(
+                    f"[INFO] Found {len(new_docs)} new documents."
+                )
+
+                self.vectorstore.add_documents(new_docs)
+
+            else:
+                print("[INFO] No new documents found.")
         groq_api_key = os.getenv("GROQ_API_KEY")
         self.llm = ChatGroq(groq_api_key=groq_api_key, model_name=llm_model)
         print(f"[INFO] Groq LLM initialized: {llm_model}")

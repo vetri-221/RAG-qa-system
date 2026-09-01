@@ -23,10 +23,56 @@ class FaissVectorStore:
         emb_pipe = EmbeddingPipeline(model_name=self.embedding_model, chunk_size=self.chunk_size, chunk_overlap=self.chunk_overlap)
         chunks = emb_pipe.chunk_documents(documents)
         embeddings = emb_pipe.embed_chunks(chunks)
-        metadatas = [{"text": chunk.page_content} for chunk in chunks]
+        metadatas = []
+
+        for chunk in chunks:
+            source = chunk.metadata.get("source", "unknown")
+
+            metadatas.append({
+                "text": chunk.page_content,
+                "source": source
+                })
         self.add_embeddings(np.array(embeddings).astype('float32'), metadatas)
         self.save()
         print(f"[INFO] Vector store built and saved to {self.persist_dir}")
+
+    def add_documents(self, documents: List[Any]):
+        if not documents:
+            print("[INFO] No new documents to add.")
+            return
+        print(f"[INFO] Adding {len(documents)} new documents...")
+        emb_pipe = EmbeddingPipeline(
+            model_name=self.embedding_model,
+            chunk_size=self.chunk_size,
+            chunk_overlap=self.chunk_overlap
+        )
+
+        chunks = emb_pipe.chunk_documents(documents)
+
+        if not chunks:
+            print("[INFO] No chunks created.")
+            return
+
+        embeddings = emb_pipe.embed_chunks(chunks)
+
+        metadatas = []
+
+        for chunk in chunks:
+
+            source = chunk.metadata.get("source", "unknown")
+            metadatas.append({
+                "text": chunk.page_content,
+                "source": source
+            })
+
+        self.add_embeddings(
+            np.array(embeddings).astype("float32"),
+            metadatas
+        )
+
+        self.save()
+
+        print(f"[INFO] Added {len(chunks)} new chunks to FAISS.")
 
     def add_embeddings(self, embeddings: np.ndarray, metadatas: List[Any] = None):
         dim = embeddings.shape[1]
